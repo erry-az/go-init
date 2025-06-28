@@ -1,0 +1,38 @@
+# Go binaries and object files
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+# Generated files
+*.pb.go
+*.pb.gw.go
+*.swagger.json
+*.mock.go
+
+# Database volumes
+.postgres-data
+
+# Compiled binaries
+/bin/
+
+# IDE files
+.idea/
+.vscode/
+
+# Environment files
+.env
+.env.local
+
+# Nix
+result
+result-*
+
+# Misc
+.DS_Store
+.direnv

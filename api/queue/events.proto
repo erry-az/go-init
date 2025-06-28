@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package api.v1;
+
+option go_package = "github.com/erry-az/go-init/api/v1";
+
+import "buf/validate/validate.proto";
+
+// UserCreatedEvent is published when a new user is created
+message UserCreatedEvent {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string name = 2 [(buf.validate.field).string = {min_len: 1, max_len: 100}];
+  string email = 3 [(buf.validate.field).string.email = true];
+  string created_at = 4;
+}
+
+// UserUpdatedEvent is published when a user is updated
+message UserUpdatedEvent {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string name = 2 [(buf.validate.field).string = {min_len: 1, max_len: 100}];
+  string email = 3 [(buf.validate.field).string.email = true];
+  string updated_at = 4;
+}
