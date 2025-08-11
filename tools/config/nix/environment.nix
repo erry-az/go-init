@@ -3,7 +3,7 @@
   # Basic environment setup
   setup = ''
     echo "Setting up nix-shell environment..."
-    
+
     # Set zsh as default shell but don't auto-exec for non-interactive sessions
     export SHELL=${pkgs.zsh}/bin/zsh
 
@@ -14,7 +14,7 @@
 
     # Environment variables
     export EDITOR=nvim
-    
+
     # Go environment variables
     export GOROOT=${pkgs.go}/share/go
     export GOPATH=$HOME/go
@@ -28,11 +28,5 @@
         --color=border:#403d52,header:#31748f,gutter:#191724
         --color=spinner:#f6c177,info:#9ccfd8
         --color=pointer:#c4a7e7,marker:#eb6f92,prompt:#908caa"
-
-    # Only switch to zsh for interactive sessions
-#    if [[ "$-" == *i* && "$0" != "zsh" && "$ZSH_NAME" != "zsh" && -z "$NIX_SHELL_ZSH" ]]; then
-#      export NIX_SHELL_ZSH=1
-#      exec ${pkgs.zsh}/bin/zsh
-#    fi
   '';
 }

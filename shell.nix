@@ -25,20 +25,20 @@ pkgs.mkShell {
     
     # Create .zshrc in the .config/zsh directory
     cat > "$ZDOTDIR/.zshrc" << 'EOF'
-    # Source your existing zshrc if it exists
-    [[ -f ~/.zshrc ]] && source ~/.zshrc
+# Source your existing zshrc if it exists
+[[ -f ~/.zshrc ]] && source ~/.zshrc
 
-    # Environment setup
-    ${environment.setup}
+# Environment setup
+${environment.setup}
 
-    # ZSH configuration
-    ${zshConfig.config}
+# ZSH configuration
+${zshConfig.config}
 
-    # Aliases setup
-    ${aliases.setup}
+# Aliases setup
+${aliases.setup}
 
-    # Integrations setup
-    ${integrations.setup}
+# Integrations setup
+${integrations.setup}
 EOF
     
     # Launch zsh with ZDOTDIR set
