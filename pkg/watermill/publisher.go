@@ -2,60 +2,62 @@ package watermill
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
+	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
-	"github.com/ThreeDotsLabs/watermill-amqp/v2/pkg/amqp"
+	watersql "github.com/ThreeDotsLabs/watermill-sql/v2/pkg/sql"
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
 )
 
 type Publisher struct {
-	publisher *amqp.Publisher
-	config    *Config
+	publisher message.Publisher
 	logger    watermill.LoggerAdapter
 }
 
-func NewPublisher(config *Config, logger watermill.LoggerAdapter) (*Publisher, error) {
-	amqpConfig := amqp.NewDurablePubSubConfig(config.AMQPURL, nil)
-
-	if config.Exchange != "" {
-		amqpConfig.Exchange = amqp.ExchangeConfig{
-			GenerateName: func(topic string) string {
-				return config.Exchange
-			},
-			Type:    config.ExchangeType,
-			Durable: config.Durable,
-		}
-	}
-
-	publisher, err := amqp.NewPublisher(amqpConfig, logger)
+func NewPublisher(db *sql.DB, logger watermill.LoggerAdapter) (*Publisher, error) {
+	publisher, err := watersql.NewPublisher(
+		db,
+		watersql.PublisherConfig{
+			SchemaAdapter: watersql.DefaultPostgreSQLSchema{},
+		},
+		logger,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create publisher: %w", err)
+		return nil, err
 	}
 
 	return &Publisher{
 		publisher: publisher,
-		config:    config,
 		logger:    logger,
 	}, nil
 }
 
-func (p *Publisher) Publish(ctx context.Context, topic string, event proto.Message) error {
-	data, err := proto.Marshal(event)
+func (p *Publisher) PublishProtoMessage(ctx context.Context, topic string, msg proto.Message) error {
+	data, err := proto.Marshal(msg)
 	if err != nil {
-		return fmt.Errorf("failed to marshal event: %w", err)
+		return err
 	}
 
-	msg := message.NewMessage(watermill.NewUUID(), data)
-	msg.Metadata.Set("content-type", "application/protobuf")
-	msg.Metadata.Set("type", string(proto.MessageName(event)))
+	watermillMsg := message.NewMessage(uuid.New().String(), data)
+	watermillMsg.Metadata.Set("content-type", "application/x-protobuf")
+	watermillMsg.Metadata.Set("timestamp", time.Now().Format(time.RFC3339))
 
-	if err := p.publisher.Publish(topic, msg); err != nil {
-		return fmt.Errorf("failed to publish message: %w", err)
+	return p.publisher.Publish(topic, watermillMsg)
+}
+
+func (p *Publisher) Publish(ctx context.Context, topic string, data []byte, metadata map[string]string) error {
+	watermillMsg := message.NewMessage(uuid.New().String(), data)
+	
+	for key, value := range metadata {
+		watermillMsg.Metadata.Set(key, value)
 	}
+	
+	watermillMsg.Metadata.Set("timestamp", time.Now().Format(time.RFC3339))
 
-	return nil
+	return p.publisher.Publish(topic, watermillMsg)
 }
 
 func (p *Publisher) Close() error {

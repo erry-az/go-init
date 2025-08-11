@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package proto.event.v1;
+
+import "google/protobuf/timestamp.proto";
+import "api/v1/product.proto";
+import "options/descriptor.proto";
+
+option go_package = "github.com/erry-az/go-init/proto/event/v1";
+
+// ProductCreatedEvent represents a product creation event
+message ProductCreatedEvent {
+  option (voi.event.options).topic_name = "product.created";
+
+  string event_id = 1;
+  api.v1.Product product = 2;
+  google.protobuf.Timestamp event_time = 3;
+  string correlation_id = 4;
+  ProductCreatedEventData data = 5;
+}
+
+message ProductCreatedEventData {
+  string source = 1;
+  map<string, string> metadata = 2;
+}
+
+// ProductUpdatedEvent represents a product update event
+message ProductUpdatedEvent {
+  option (voi.event.options).topic_name = "product.updated";
+  
+  string event_id = 1;
+  api.v1.Product product = 2;
+  google.protobuf.Timestamp event_time = 3;
+  string correlation_id = 4;
+  ProductUpdatedEventData data = 5;
+}
+
+message ProductUpdatedEventData {
+  string source = 1;
+  api.v1.Product previous_product = 2;
+  repeated string changed_fields = 3;
+  map<string, string> metadata = 4;
+}
+
+// ProductDeletedEvent represents a product deletion event
+message ProductDeletedEvent {
+  option (voi.event.options).topic_name = "product.deleted";
+  
+  string event_id = 1;
+  api.v1.Product product = 2;
+  google.protobuf.Timestamp event_time = 3;
+  string correlation_id = 4;
+  ProductDeletedEventData data = 5;
+}
+
+message ProductDeletedEventData {
+  string source = 1;
+  string reason = 2;
+  map<string, string> metadata = 3;
+}
+
+// ProductPriceChangedEvent represents a product price change event
+message ProductPriceChangedEvent {
+  option (voi.event.options).topic_name = "product.price.changed";
+  
+  string event_id = 1;
+  api.v1.Product product = 2;
+  google.protobuf.Timestamp event_time = 3;
+  string correlation_id = 4;
+  ProductPriceChangedEventData data = 5;
+}
+
+message ProductPriceChangedEventData {
+  string source = 1;
+  string previous_price = 2;
+  string new_price = 3;
+  map<string, string> metadata = 4;
+}

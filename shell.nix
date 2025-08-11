@@ -1,45 +1,47 @@
 { pkgs ? import <nixpkgs> {} }:
 
+let
+  # Import modular configuration
+  environment = import ./tools/config/nix/environment.nix { inherit pkgs; };
+  zshConfig = import ./tools/config/nix/zsh.nix { inherit pkgs; };
+  aliases = import ./tools/config/nix/aliases.nix { inherit pkgs; };
+  integrations = import ./tools/config/nix/integrations.nix { inherit pkgs; };
+  packages = import ./tools/config/nix/packages.nix { inherit pkgs; };
+
+in
+
 pkgs.mkShell {
-  buildInputs = with pkgs; [
-    # Go and tools
-    go
-    gopls
-    golangci-lint
-    gotools
-    go-tools # Instead of go-mockgen
-    delve
-    
-    # Database tools
-    postgresql
-    goose
-    sqlc
-    
-    # Protobuf tools
-    protobuf
-    buf
-    
-    # Docker and container tools
-    docker
-    docker-compose
-    
-    # Terminal tools
-    starship
-    fish # Using fish shell
-    fzf # For enhanced history search
-  ];
-  
+  # All packages from the packages module
+  buildInputs = packages.packages;
+
   shellHook = ''
-    export GOPATH="$HOME/go"
-    export PATH="$GOPATH/bin:$PATH"
+    # Set environment variables
+    export SHELL=${pkgs.zsh}/bin/zsh
+    export DEV_CONFIG=".config"
+    export ZDOTDIR="$(pwd)/$DEV_CONFIG/zsh"
+
+    # Create .config/zsh directory in current working directory
+    mkdir -p $ZDOTDIR
     
-    # Create fish config directory if it doesn't exist
-    mkdir -p ~/.config/fish
+    # Create .zshrc in the .config/zsh directory
+    cat > "$ZDOTDIR/.zshrc" << 'EOF'
+    # Source your existing zshrc if it exists
+    [[ -f ~/.zshrc ]] && source ~/.zshrc
+
+    # Environment setup
+    ${environment.setup}
+
+    # ZSH configuration
+    ${zshConfig.config}
+
+    # Aliases setup
+    ${aliases.setup}
+
+    # Integrations setup
+    ${integrations.setup}
+EOF
     
-    # Configure fish to use starship
-    echo 'starship init fish | source' > ~/.config/fish/config.fish
-    
-    # Start fish shell with starship
-    exec fish -l
+    # Launch zsh with ZDOTDIR set
+    exec ${pkgs.zsh}/bin/zsh
   '';
 }

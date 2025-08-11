@@ -36,3 +36,7 @@ result-*
 # Misc
 .DS_Store
 .direnv
+
+# Local config directory
+.config/
+internal/repository/sqlc

@@ -2,54 +2,82 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-	apiv1 "github.com/erry-az/go-init/api/v1"
-	"github.com/erry-az/go-init/internal/service"
-	"google.golang.org/grpc"
 	"log"
 	"net"
+
+	watermillbase "github.com/ThreeDotsLabs/watermill"
+	handlergrpc "github.com/erry-az/go-init/internal/handler/grpc"
+	"github.com/erry-az/go-init/internal/repository/sqlc"
+	"github.com/erry-az/go-init/pkg/watermill"
+	"github.com/erry-az/go-init/proto/api/v1"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
-// GRPCServer represents the gRPC server
 type GRPCServer struct {
-	userService *service.UserService
-	grpcServer  *grpc.Server
-	grpcPort    int
+	server         *grpc.Server
+	userService    *handlergrpc.UserService
+	productService *handlergrpc.ProductService
 }
 
-// NewGRPCServer creates a new gRPC server
-func NewGRPCServer(userService *service.UserService, grpcPort int) *GRPCServer {
-	return &GRPCServer{
-		userService: userService,
-		grpcPort:    grpcPort,
-	}
-}
-
-// Start starts the gRPC and HTTP servers
-func (s *GRPCServer) Start(ctx context.Context) error {
-	// Start gRPC server
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", s.grpcPort))
+func NewGRPCServer(dbPool *pgxpool.Pool, sqlDB *sql.DB, logger watermillbase.LoggerAdapter) (*GRPCServer, error) {
+	// Create Watermill publisher (needs sql.DB)
+	publisher, err := watermill.NewPublisher(sqlDB, logger)
 	if err != nil {
-		return fmt.Errorf("failed to listen: %w", err)
+		return nil, fmt.Errorf("failed to create publisher: %w", err)
 	}
 
-	s.grpcServer = grpc.NewServer()
-	apiv1.RegisterUserServiceServer(s.grpcServer, s.userService)
+	// Create SQLC querier (needs pgx connection)
+	querier := sqlc.New(dbPool)
 
+	// Create services
+	userService := handlergrpc.NewUserService(querier, publisher)
+	productService := handlergrpc.NewProductService(querier, publisher)
+
+	// Create gRPC server
+	server := grpc.NewServer()
+
+	// Register services
+	v1.RegisterUserServiceServer(server, userService)
+	v1.RegisterProductServiceServer(server, productService)
+
+	// Enable reflection for development
+	reflection.Register(server)
+
+	return &GRPCServer{
+		server:         server,
+		userService:    userService,
+		productService: productService,
+	}, nil
+}
+
+func (s *GRPCServer) Start(ctx context.Context, port string) error {
+	lis, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		return fmt.Errorf("failed to listen on port %s: %w", port, err)
+	}
+
+	log.Printf("gRPC server starting on port %s", port)
+
+	// Start server in goroutine
 	go func() {
-		log.Printf("Starting gRPC server on port %d", s.grpcPort)
-		if err := s.grpcServer.Serve(lis); err != nil {
-			log.Fatalf("Failed to serve gRPC: %v", err)
+		if err := s.server.Serve(lis); err != nil {
+			log.Printf("gRPC server error: %v", err)
 		}
 	}()
 
+	// Wait for context cancellation
+	<-ctx.Done()
+
+	log.Println("Shutting down gRPC server...")
+	s.server.GracefulStop()
+
 	return nil
 }
 
-// Stop stops the gRPC and HTTP servers
-func (s *GRPCServer) Stop(ctx context.Context) error {
-	// Stop gRPC server
-	s.grpcServer.GracefulStop()
-
-	return nil
+func (s *GRPCServer) Stop() {
+	s.server.GracefulStop()
 }

@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package proto.event.v1;
+
+import "google/protobuf/timestamp.proto";
+import "api/v1/user.proto";
+import "options/descriptor.proto";
+
+option go_package = "github.com/erry-az/go-init/proto/event/v1";
+
+// UserCreatedEvent represents a user creation event
+message UserCreatedEvent {
+  option (voi.event.options).topic_name = "user.created";
+  
+  string event_id = 1;
+  api.v1.User user = 2;
+  google.protobuf.Timestamp event_time = 3;
+  string correlation_id = 4;
+  UserCreatedEventData data = 5;
+}
+
+message UserCreatedEventData {
+  string source = 1;
+  map<string, string> metadata = 2;
+}
+
+// UserUpdatedEvent represents a user update event
+message UserUpdatedEvent {
+  option (voi.event.options).topic_name = "user.updated";
+  
+  string event_id = 1;
+  api.v1.User user = 2;
+  google.protobuf.Timestamp event_time = 3;
+  string correlation_id = 4;
+  UserUpdatedEventData data = 5;
+}
+
+message UserUpdatedEventData {
+  string source = 1;
+  api.v1.User previous_user = 2;
+  repeated string changed_fields = 3;
+  map<string, string> metadata = 4;
+}
+
+// UserDeletedEvent represents a user deletion event
+message UserDeletedEvent {
+  option (voi.event.options).topic_name = "user.deleted";
+  
+  string event_id = 1;
+  api.v1.User user = 2;
+  google.protobuf.Timestamp event_time = 3;
+  string correlation_id = 4;
+  UserDeletedEventData data = 5;
+}
+
+message UserDeletedEventData {
+  string source = 1;
+  string reason = 2;
+  map<string, string> metadata = 3;
+}

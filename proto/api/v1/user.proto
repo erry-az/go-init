@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package proto.api.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/erry-az/go-init/proto/api/v1";
+
+// User represents a user entity
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+// CreateUserRequest represents the request to create a new user
+message CreateUserRequest {
+  string name = 1;
+  string email = 2;
+}
+
+// CreateUserResponse represents the response after creating a user
+message CreateUserResponse {
+  User user = 1;
+}
+
+// GetUserRequest represents the request to get a user by ID
+message GetUserRequest {
+  string id = 1;
+}
+
+// GetUserResponse represents the response containing a user
+message GetUserResponse {
+  User user = 1;
+}
+
+// UpdateUserRequest represents the request to update a user
+message UpdateUserRequest {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+// UpdateUserResponse represents the response after updating a user
+message UpdateUserResponse {
+  User user = 1;
+}
+
+// DeleteUserRequest represents the request to delete a user
+message DeleteUserRequest {
+  string id = 1;
+}
+
+// ListUsersRequest represents the request to list users
+message ListUsersRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  string search_query = 3;
+}
+
+// ListUsersResponse represents the response containing a list of users
+message ListUsersResponse {
+  repeated User users = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+}
+
+// BulkCreateUsersRequest represents the request to create multiple users
+message BulkCreateUsersRequest {
+  repeated CreateUserRequest users = 1;
+}
+
+// BulkCreateUsersResponse represents the response after creating multiple users
+message BulkCreateUsersResponse {
+  repeated User users = 1;
+  repeated string failed_emails = 2;
+}
+
+// UserService provides operations for managing users
+service UserService {
+  // CreateUser creates a new user
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/users"
+      body: "*"
+    };
+  }
+
+  // GetUser retrieves a user by ID
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/users/{id}"
+    };
+  }
+
+  // UpdateUser updates an existing user
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/users/{id}"
+      body: "*"
+    };
+  }
+
+  // DeleteUser deletes a user by ID
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/v1/users/{id}"
+    };
+  }
+
+  // ListUsers lists users with pagination and search
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/users"
+    };
+  }
+
+  // BulkCreateUsers creates multiple users in a single request
+  rpc BulkCreateUsers(BulkCreateUsersRequest) returns (BulkCreateUsersResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/users/bulk"
+      body: "*"
+    };
+  }
+}

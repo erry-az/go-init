@@ -14,7 +14,7 @@ A template for Go microservices using modern tools and best practices.
 - Nix shell for development environment
 - Makefile for common tasks
 - Mock generation using Uber's go-mock
-- Database migrations with Goose
+- Database migrations with Atlas
 - To Be implemented: https://github.com/voi-oss/protoc-gen-event
 
 ## Requirements
@@ -28,6 +28,11 @@ A template for Go microservices using modern tools and best practices.
 # Enter the development environment with Nix
 nix-shell
 
+# Launch interactive development menu (recommended)
+# Dynamic fzf-based menu that parses Makefile targets automatically
+make dev
+
+# Or run individual commands:
 # Start services (PostgreSQL, RabbitMQ)
 make up
 
@@ -88,7 +93,7 @@ The project uses several code generation tools:
 
 ### Database
 
-PostgreSQL is used as the database. Migrations are managed with Goose and can be found in the `db/migrations` directory. SQL queries are defined in the `db/queries` directory and type-safe Go code is generated using sqlc.
+PostgreSQL is used as the database. Migrations are managed with Atlas and can be found in the `db/migrations` directory. The current schema state is defined in `db/schema.sql`. SQL queries are defined in the `db/queries` directory and type-safe Go code is generated using sqlc.
 
 ### Dependency Injection
 

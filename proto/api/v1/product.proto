@@ -1,0 +1,172 @@
+syntax = "proto3";
+
+package proto.api.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/erry-az/go-init/proto/api/v1";
+
+// Product represents a product entity
+message Product {
+  string id = 1;
+  string name = 2;
+  string price = 3; // Using string to avoid floating point precision issues
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+// CreateProductRequest represents the request to create a new product
+message CreateProductRequest {
+  string name = 1;
+  string price = 2;
+}
+
+// CreateProductResponse represents the response after creating a product
+message CreateProductResponse {
+  Product product = 1;
+}
+
+// GetProductRequest represents the request to get a product by ID
+message GetProductRequest {
+  string id = 1;
+}
+
+// GetProductResponse represents the response containing a product
+message GetProductResponse {
+  Product product = 1;
+}
+
+// UpdateProductRequest represents the request to update a product
+message UpdateProductRequest {
+  string id = 1;
+  string name = 2;
+  string price = 3;
+}
+
+// UpdateProductResponse represents the response after updating a product
+message UpdateProductResponse {
+  Product product = 1;
+}
+
+// DeleteProductRequest represents the request to delete a product
+message DeleteProductRequest {
+  string id = 1;
+}
+
+// ListProductsRequest represents the request to list products
+message ListProductsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  string search_query = 3;
+  PriceRange price_range = 4;
+}
+
+// PriceRange represents a price filtering range
+message PriceRange {
+  string min_price = 1;
+  string max_price = 2;
+}
+
+// ListProductsResponse represents the response containing a list of products
+message ListProductsResponse {
+  repeated Product products = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+}
+
+// BulkUpdatePricesRequest represents the request to update multiple product prices
+message BulkUpdatePricesRequest {
+  repeated ProductPriceUpdate updates = 1;
+}
+
+// ProductPriceUpdate represents a single product price update
+message ProductPriceUpdate {
+  string id = 1;
+  string price = 2;
+}
+
+// BulkUpdatePricesResponse represents the response after updating multiple prices
+message BulkUpdatePricesResponse {
+  repeated Product updated_products = 1;
+  repeated string failed_ids = 2;
+}
+
+// ProductAnalyticsRequest represents request for product analytics
+message ProductAnalyticsRequest {
+  google.protobuf.Timestamp start_date = 1;
+  google.protobuf.Timestamp end_date = 2;
+  repeated string product_ids = 3;
+}
+
+// ProductAnalyticsResponse represents product analytics data
+message ProductAnalyticsResponse {
+  int32 total_products = 1;
+  string average_price = 2;
+  string highest_price = 3;
+  string lowest_price = 4;
+  repeated ProductCategoryStats category_stats = 5;
+}
+
+// ProductCategoryStats represents statistics by category
+message ProductCategoryStats {
+  string category = 1;
+  int32 count = 2;
+  string average_price = 3;
+}
+
+// ProductService provides operations for managing products
+service ProductService {
+  // CreateProduct creates a new product
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/products"
+      body: "*"
+    };
+  }
+
+  // GetProduct retrieves a product by ID
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/products/{id}"
+    };
+  }
+
+  // UpdateProduct updates an existing product
+  rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/products/{id}"
+      body: "*"
+    };
+  }
+
+  // DeleteProduct deletes a product by ID
+  rpc DeleteProduct(DeleteProductRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/v1/products/{id}"
+    };
+  }
+
+  // ListProducts lists products with pagination, search, and filtering
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/products"
+    };
+  }
+
+  // BulkUpdatePrices updates prices for multiple products
+  rpc BulkUpdatePrices(BulkUpdatePricesRequest) returns (BulkUpdatePricesResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/products/bulk-update-prices"
+      body: "*"
+    };
+  }
+
+  // GetProductAnalytics retrieves analytics data for products
+  rpc GetProductAnalytics(ProductAnalyticsRequest) returns (ProductAnalyticsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/products/analytics"
+    };
+  }
+}
