@@ -3,9 +3,10 @@
 ## Default target - generate code and build application
 all: generate build
 
-## Initialize running
-init: generate
-	nix-shell
+## Initialize project - setup environment and generate code
+init:
+	@echo "🚀 Initializing project..."
+	@nix-shell --run "make generate"
 
 ## Build the application binary
 build:
