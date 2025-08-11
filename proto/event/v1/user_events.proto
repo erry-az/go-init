@@ -12,9 +12,9 @@ option go_package = "github.com/erry-az/go-init/proto/event/v1";
 message UserCreatedEvent {
   option (voi.event.options).topic_name = "user.created";
   
-  string event_id = 1;
+  string event_id = 1 [(voi.event.field).inject_message_id = true];
   api.v1.User user = 2;
-  google.protobuf.Timestamp event_time = 3;
+  google.protobuf.Timestamp event_time = 3 [(voi.event.field).inject_publish_time = true];
   string correlation_id = 4;
   UserCreatedEventData data = 5;
 }
@@ -28,9 +28,9 @@ message UserCreatedEventData {
 message UserUpdatedEvent {
   option (voi.event.options).topic_name = "user.updated";
   
-  string event_id = 1;
+  string event_id = 1 [(voi.event.field).inject_message_id = true];
   api.v1.User user = 2;
-  google.protobuf.Timestamp event_time = 3;
+  google.protobuf.Timestamp event_time = 3 [(voi.event.field).inject_publish_time = true];
   string correlation_id = 4;
   UserUpdatedEventData data = 5;
 }
@@ -46,9 +46,9 @@ message UserUpdatedEventData {
 message UserDeletedEvent {
   option (voi.event.options).topic_name = "user.deleted";
   
-  string event_id = 1;
+  string event_id = 1 [(voi.event.field).inject_message_id = true];
   api.v1.User user = 2;
-  google.protobuf.Timestamp event_time = 3;
+  google.protobuf.Timestamp event_time = 3 [(voi.event.field).inject_publish_time = true];
   string correlation_id = 4;
   UserDeletedEventData data = 5;
 }

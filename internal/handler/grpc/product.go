@@ -76,6 +76,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *v1.CreateProduc
 		},
 	}
 
+	event.Publish(ctx, s.publisher)
 	if err := s.publisher.PublishProtoMessage(ctx, watermill.TopicProductCreated, event); err != nil {
 		fmt.Printf("Failed to publish product created event: %v\n", err)
 	}

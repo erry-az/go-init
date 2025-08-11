@@ -12,9 +12,9 @@ option go_package = "github.com/erry-az/go-init/proto/event/v1";
 message ProductCreatedEvent {
   option (voi.event.options).topic_name = "product.created";
 
-  string event_id = 1;
+  string event_id = 1 [(voi.event.field).inject_message_id = true];
   api.v1.Product product = 2;
-  google.protobuf.Timestamp event_time = 3;
+  google.protobuf.Timestamp event_time = 3 [(voi.event.field).inject_publish_time = true];
   string correlation_id = 4;
   ProductCreatedEventData data = 5;
 }
@@ -28,9 +28,9 @@ message ProductCreatedEventData {
 message ProductUpdatedEvent {
   option (voi.event.options).topic_name = "product.updated";
   
-  string event_id = 1;
+  string event_id = 1 [(voi.event.field).inject_message_id = true];
   api.v1.Product product = 2;
-  google.protobuf.Timestamp event_time = 3;
+  google.protobuf.Timestamp event_time = 3 [(voi.event.field).inject_publish_time = true];
   string correlation_id = 4;
   ProductUpdatedEventData data = 5;
 }
@@ -46,9 +46,9 @@ message ProductUpdatedEventData {
 message ProductDeletedEvent {
   option (voi.event.options).topic_name = "product.deleted";
   
-  string event_id = 1;
+  string event_id = 1 [(voi.event.field).inject_message_id = true];
   api.v1.Product product = 2;
-  google.protobuf.Timestamp event_time = 3;
+  google.protobuf.Timestamp event_time = 3 [(voi.event.field).inject_publish_time = true];
   string correlation_id = 4;
   ProductDeletedEventData data = 5;
 }
@@ -63,9 +63,9 @@ message ProductDeletedEventData {
 message ProductPriceChangedEvent {
   option (voi.event.options).topic_name = "product.price.changed";
   
-  string event_id = 1;
+  string event_id = 1 [(voi.event.field).inject_message_id = true];
   api.v1.Product product = 2;
-  google.protobuf.Timestamp event_time = 3;
+  google.protobuf.Timestamp event_time = 3 [(voi.event.field).inject_publish_time = true];
   string correlation_id = 4;
   ProductPriceChangedEventData data = 5;
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -31,8 +32,7 @@ func main() {
 	defer db.Close()
 
 	// Create logger
-	logger := watermillbase.NewStdLogger(false, false)
-
+	logger := watermillbase.NewSlogLogger(slog.Default())
 	// Create subscriber
 	subscriber, err := watermill.NewSubscriber(db, logger)
 	if err != nil {
