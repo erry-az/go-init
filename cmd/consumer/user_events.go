@@ -11,15 +11,15 @@ import (
 
 	watermillbase "github.com/ThreeDotsLabs/watermill"
 	"github.com/erry-az/go-init/config"
+	"github.com/erry-az/go-init/internal/handler/consumer"
 	"github.com/erry-az/go-init/pkg/watermill"
 	eventv1 "github.com/erry-az/go-init/proto/event/v1"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"google.golang.org/protobuf/proto"
 )
 
 func main() {
 	// Load configuration
-	cfg, err := config.Load()
+	cfg, err := config.New()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
@@ -42,32 +42,26 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Subscribe to user events
-	err = subscriber.SubscribeProto(
+	// Subscribe to user events using generated handlers
+	err = subscriber.Subscribe(
 		ctx,
-		watermill.TopicUserCreated,
-		&eventv1.UserCreatedEvent{},
-		handleUserCreated,
+		eventv1.UserCreatedEventHandler(consumer.HandleUserCreated),
 	)
 	if err != nil {
 		log.Fatalf("Failed to subscribe to user created events: %v", err)
 	}
 
-	err = subscriber.SubscribeProto(
+	err = subscriber.Subscribe(
 		ctx,
-		watermill.TopicUserUpdated,
-		&eventv1.UserUpdatedEvent{},
-		handleUserUpdated,
+		eventv1.UserUpdatedEventHandler(consumer.HandleUserUpdated),
 	)
 	if err != nil {
 		log.Fatalf("Failed to subscribe to user updated events: %v", err)
 	}
 
-	err = subscriber.SubscribeProto(
+	err = subscriber.Subscribe(
 		ctx,
-		watermill.TopicUserDeleted,
-		&eventv1.UserDeletedEvent{},
-		handleUserDeleted,
+		eventv1.UserDeletedEventHandler(consumer.HandleUserDeleted),
 	)
 	if err != nil {
 		log.Fatalf("Failed to subscribe to user deleted events: %v", err)
@@ -83,65 +77,4 @@ func main() {
 	log.Println("Shutting down user events consumer...")
 	cancel()
 	subscriber.Close()
-}
-
-func handleUserCreated(ctx context.Context, msg proto.Message) error {
-	userEvent := msg.(*eventv1.UserCreatedEvent)
-	log.Printf("User created: ID=%s, Name=%s, Email=%s, EventID=%s, Source=%s",
-		userEvent.User.Id,
-		userEvent.User.Name,
-		userEvent.User.Email,
-		userEvent.EventId,
-		userEvent.Data.Source,
-	)
-
-	// Here you could:
-	// - Send welcome email
-	// - Create user profile in another service
-	// - Update analytics
-	// - Log audit trail
-	// - Access metadata: userEvent.Data.Metadata
-
-	return nil
-}
-
-func handleUserUpdated(ctx context.Context, msg proto.Message) error {
-	userEvent := msg.(*eventv1.UserUpdatedEvent)
-	log.Printf("User updated: ID=%s, Name=%s, Email=%s, EventID=%s, Source=%s, ChangedFields=%v",
-		userEvent.User.Id,
-		userEvent.User.Name,
-		userEvent.User.Email,
-		userEvent.EventId,
-		userEvent.Data.Source,
-		userEvent.Data.ChangedFields,
-	)
-
-	// Here you could:
-	// - Update cached user data
-	// - Sync with external systems
-	// - Update search indexes
-	// - Access previous user: userEvent.Data.PreviousUser
-	// - Access metadata: userEvent.Data.Metadata
-
-	return nil
-}
-
-func handleUserDeleted(ctx context.Context, msg proto.Message) error {
-	userEvent := msg.(*eventv1.UserDeletedEvent)
-	log.Printf("User deleted: ID=%s, Name=%s, EventID=%s, Source=%s, Reason=%s",
-		userEvent.User.Id,
-		userEvent.User.Name,
-		userEvent.EventId,
-		userEvent.Data.Source,
-		userEvent.Data.Reason,
-	)
-
-	// Here you could:
-	// - Clean up user data
-	// - Cancel subscriptions
-	// - Archive user information
-	// - Update analytics
-	// - Access metadata: userEvent.Data.Metadata
-
-	return nil
 }

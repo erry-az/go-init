@@ -23,10 +23,8 @@ plugins:
     out: docs
     opt:
       - allow_delete_body=true
-  # Event generation using protoc-gen-event
-  - local: protoc-gen-event
-    out: proto
-    opt:
-      - paths=source_relative
 managed:
   enabled: true
+  disable:
+    - file_option: go_package
+      module: buf.build/bufbuild/protovalidate

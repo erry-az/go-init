@@ -6,7 +6,7 @@ modules:
 deps:
   - buf.build/googleapis/googleapis
   - buf.build/grpc-ecosystem/grpc-gateway
-  - buf.build/fintrac/protoc-gen-event
+  - buf.build/bufbuild/protovalidate:v0.14.1
 
 breaking:
   use:

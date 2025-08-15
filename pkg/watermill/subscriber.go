@@ -16,15 +16,21 @@ type Subscriber struct {
 	logger     watermill.LoggerAdapter
 }
 
+type IntHandler interface {
+	Handle(*message.Message) error
+	Topic() string
+}
+
 type ProtoMessageHandler func(ctx context.Context, msg proto.Message) error
 
 func NewSubscriber(db *sql.DB, logger watermill.LoggerAdapter) (*Subscriber, error) {
 	subscriber, err := watersql.NewSubscriber(
 		db,
 		watersql.SubscriberConfig{
-			SchemaAdapter:  watersql.DefaultPostgreSQLSchema{},
-			OffsetsAdapter: watersql.DefaultPostgreSQLOffsetsAdapter{},
-			PollInterval:   time.Second,
+			SchemaAdapter:    watersql.DefaultPostgreSQLSchema{},
+			OffsetsAdapter:   watersql.DefaultPostgreSQLOffsetsAdapter{},
+			PollInterval:     time.Second,
+			InitializeSchema: true,
 		},
 		logger,
 	)
@@ -32,59 +38,31 @@ func NewSubscriber(db *sql.DB, logger watermill.LoggerAdapter) (*Subscriber, err
 		return nil, err
 	}
 
+	router, err := message.NewRouter(message.RouterConfig{}, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	router.AddMiddleware()
+
 	return &Subscriber{
 		subscriber: subscriber,
 		logger:     logger,
 	}, nil
 }
 
-func (s *Subscriber) Subscribe(ctx context.Context, topic string, handler message.HandlerFunc) error {
-	messages, err := s.subscriber.Subscribe(ctx, topic)
+func (s *Subscriber) Subscribe(ctx context.Context, implHandler IntHandler) error {
+	messages, err := s.subscriber.Subscribe(ctx, implHandler.Topic())
 	if err != nil {
 		return err
 	}
 
 	go func() {
 		for msg := range messages {
-			_, err := handler(msg)
+			err := implHandler.Handle(msg)
 			if err != nil {
 				s.logger.Error("Failed to handle message", err, watermill.LogFields{
-					"topic":      topic,
-					"message_id": msg.UUID,
-				})
-				msg.Nack()
-			} else {
-				msg.Ack()
-			}
-		}
-	}()
-
-	return nil
-}
-
-func (s *Subscriber) SubscribeProto(ctx context.Context, topic string, protoMsg proto.Message, handler ProtoMessageHandler) error {
-	messages, err := s.subscriber.Subscribe(ctx, topic)
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		for msg := range messages {
-			// Clone the proto message to avoid concurrent access issues
-			clonedMsg := proto.Clone(protoMsg)
-			
-			if err := proto.Unmarshal(msg.Payload, clonedMsg); err != nil {
-				s.logger.Error("Failed to unmarshal proto message", err, watermill.LogFields{
-					"topic":      topic,
-					"message_id": msg.UUID,
-				})
-				msg.Nack()
-				continue
-			}
-
-			if err := handler(ctx, clonedMsg); err != nil {
-				s.logger.Error("Failed to handle proto message", err, watermill.LogFields{
-					"topic":      topic,
+					"topic":      implHandler.Topic(),
 					"message_id": msg.UUID,
 				})
 				msg.Nack()

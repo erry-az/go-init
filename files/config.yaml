@@ -1,0 +1,6 @@
+servers:
+  grpc_port: ":4455"
+  http_port: ":8080"
+databases:
+  go_init: "postgres://postgres:postgres@localhost:5432/go_init_db?sslmode=disable"
+  pg_mq: "postgres://postgres:postgres@localhost:5432/go_init_db?sslmode=disable"

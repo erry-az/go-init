@@ -5,12 +5,15 @@ package proto.api.v1;
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
 
 option go_package = "github.com/erry-az/go-init/proto/api/v1";
 
 // User represents a user entity
 message User {
-  string id = 1;
+  string id = 1 [
+    (buf.validate.field).string.uuid = true
+  ];
   string name = 2;
   string email = 3;
   google.protobuf.Timestamp created_at = 4;
@@ -30,7 +33,9 @@ message CreateUserResponse {
 
 // GetUserRequest represents the request to get a user by ID
 message GetUserRequest {
-  string id = 1;
+  string id = 1 [
+    (buf.validate.field).string.uuid = true
+  ];
 }
 
 // GetUserResponse represents the response containing a user
@@ -40,7 +45,9 @@ message GetUserResponse {
 
 // UpdateUserRequest represents the request to update a user
 message UpdateUserRequest {
-  string id = 1;
+  string id = 1 [
+    (buf.validate.field).string.uuid = true
+  ];
   string name = 2;
   string email = 3;
 }
@@ -52,7 +59,9 @@ message UpdateUserResponse {
 
 // DeleteUserRequest represents the request to delete a user
 message DeleteUserRequest {
-  string id = 1;
+  string id = 1 [
+    (buf.validate.field).string.uuid = true
+  ];
 }
 
 // ListUsersRequest represents the request to list users

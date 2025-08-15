@@ -3,6 +3,7 @@ module github.com/erry-az/go-init
 go 1.24.3
 
 require (
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250717165733-d22d418d82d8.1
 	github.com/ThreeDotsLabs/watermill v1.4.7
 	github.com/ThreeDotsLabs/watermill-sql/v2 v2.0.0
 	github.com/google/uuid v1.6.0
@@ -17,8 +18,14 @@ require (
 )
 
 require (
+	buf.build/go/protovalidate v0.12.0 // indirect
+	cel.dev/expr v0.24.0 // indirect
+	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
+	github.com/dentech-floss/watermill-opentelemetry-go-extra v0.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/google/cel-go v0.25.0 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
@@ -31,8 +38,13 @@ require (
 	github.com/spf13/afero v1.14.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/pflag v1.0.7 // indirect
+	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/voi-oss/watermill-opentelemetry v0.1.3 // indirect
+	go.opentelemetry.io/otel v1.36.0 // indirect
+	go.opentelemetry.io/otel/trace v1.36.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
+	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect

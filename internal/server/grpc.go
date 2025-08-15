@@ -7,11 +7,13 @@ import (
 	"log"
 	"net"
 
+	"buf.build/go/protovalidate"
 	watermillbase "github.com/ThreeDotsLabs/watermill"
 	handlergrpc "github.com/erry-az/go-init/internal/handler/grpc"
 	"github.com/erry-az/go-init/internal/repository/sqlc"
 	"github.com/erry-az/go-init/pkg/watermill"
 	"github.com/erry-az/go-init/proto/api/v1"
+	protovalidateMidleware "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -37,8 +39,15 @@ func NewGRPCServer(dbPool *pgxpool.Pool, sqlDB *sql.DB, logger watermillbase.Log
 	userService := handlergrpc.NewUserService(querier, publisher)
 	productService := handlergrpc.NewProductService(querier, publisher)
 
+	validator, err := protovalidate.New()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create validator: %w", err)
+	}
+
 	// Create gRPC server
-	server := grpc.NewServer()
+	server := grpc.NewServer(
+		grpc.UnaryInterceptor(protovalidateMidleware.UnaryServerInterceptor(validator)),
+	)
 
 	// Register services
 	v1.RegisterUserServiceServer(server, userService)

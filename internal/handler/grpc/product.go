@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	sqlc2 "github.com/erry-az/go-init/internal/repository/sqlc"
 	"github.com/erry-az/go-init/pkg/watermill"
 	"github.com/erry-az/go-init/proto/api/v1"
@@ -24,6 +25,7 @@ type ProductService struct {
 	v1.UnimplementedProductServiceServer
 	db        sqlc2.Querier
 	publisher *watermill.Publisher
+	eventBus  *cqrs.EventBus
 }
 
 func NewProductService(db sqlc2.Querier, publisher *watermill.Publisher) *ProductService {
@@ -76,8 +78,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *v1.CreateProduc
 		},
 	}
 
-	event.Publish(ctx, s.publisher)
-	if err := s.publisher.PublishProtoMessage(ctx, watermill.TopicProductCreated, event); err != nil {
+	if err := s.eventBus.Publish(ctx, event); err != nil {
 		fmt.Printf("Failed to publish product created event: %v\n", err)
 	}
 

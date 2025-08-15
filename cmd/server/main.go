@@ -8,16 +8,16 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/ThreeDotsLabs/watermill"
 	"github.com/erry-az/go-init/config"
 	"github.com/erry-az/go-init/internal/server"
-	"github.com/ThreeDotsLabs/watermill"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
 	// Load configuration
-	cfg, err := config.Load()
+	cfg, err := config.New()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}

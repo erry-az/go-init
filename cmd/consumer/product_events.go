@@ -10,15 +10,15 @@ import (
 
 	watermillbase "github.com/ThreeDotsLabs/watermill"
 	"github.com/erry-az/go-init/config"
+	"github.com/erry-az/go-init/internal/handler/consumer"
 	"github.com/erry-az/go-init/pkg/watermill"
 	eventv1 "github.com/erry-az/go-init/proto/event/v1"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"google.golang.org/protobuf/proto"
 )
 
 func main() {
 	// Load configuration
-	cfg, err := config.Load()
+	cfg, err := config.New()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
@@ -42,42 +42,34 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Subscribe to product events
-	err = subscriber.SubscribeProto(
+	// Subscribe to product events using generated handlers
+	err = subscriber.Subscribe(
 		ctx,
-		watermill.TopicProductCreated,
-		&eventv1.ProductCreatedEvent{},
-		handleProductCreated,
+		eventv1.ProductCreatedEventHandler(consumer.HandleProductCreated),
 	)
 	if err != nil {
 		log.Fatalf("Failed to subscribe to product created events: %v", err)
 	}
 
-	err = subscriber.SubscribeProto(
+	err = subscriber.Subscribe(
 		ctx,
-		watermill.TopicProductUpdated,
-		&eventv1.ProductUpdatedEvent{},
-		handleProductUpdated,
+		eventv1.ProductUpdatedEventHandler(consumer.HandleProductUpdated),
 	)
 	if err != nil {
 		log.Fatalf("Failed to subscribe to product updated events: %v", err)
 	}
 
-	err = subscriber.SubscribeProto(
+	err = subscriber.Subscribe(
 		ctx,
-		watermill.TopicProductDeleted,
-		&eventv1.ProductDeletedEvent{},
-		handleProductDeleted,
+		eventv1.ProductDeletedEventHandler(consumer.HandleProductDeleted),
 	)
 	if err != nil {
 		log.Fatalf("Failed to subscribe to product deleted events: %v", err)
 	}
 
-	err = subscriber.SubscribeProto(
+	err = subscriber.Subscribe(
 		ctx,
-		watermill.TopicProductPriceChanged,
-		&eventv1.ProductPriceChangedEvent{},
-		handleProductPriceChanged,
+		eventv1.ProductPriceChangedEventHandler(consumer.HandleProductPriceChanged),
 	)
 	if err != nil {
 		log.Fatalf("Failed to subscribe to product price changed events: %v", err)
@@ -93,86 +85,4 @@ func main() {
 	log.Println("Shutting down product events consumer...")
 	cancel()
 	subscriber.Close()
-}
-
-func handleProductCreated(ctx context.Context, msg proto.Message) error {
-	productEvent := msg.(*eventv1.ProductCreatedEvent)
-	log.Printf("Product created: ID=%s, Name=%s, Price=%s, EventID=%s, Source=%s",
-		productEvent.Product.Id,
-		productEvent.Product.Name,
-		productEvent.Product.Price,
-		productEvent.EventId,
-		productEvent.Data.Source,
-	)
-
-	// Here you could:
-	// - Update search index
-	// - Sync with inventory system
-	// - Update analytics
-	// - Send notifications
-	// - Access metadata: productEvent.Data.Metadata
-
-	return nil
-}
-
-func handleProductUpdated(ctx context.Context, msg proto.Message) error {
-	productEvent := msg.(*eventv1.ProductUpdatedEvent)
-	log.Printf("Product updated: ID=%s, Name=%s, Price=%s, EventID=%s, Source=%s, ChangedFields=%v",
-		productEvent.Product.Id,
-		productEvent.Product.Name,
-		productEvent.Product.Price,
-		productEvent.EventId,
-		productEvent.Data.Source,
-		productEvent.Data.ChangedFields,
-	)
-
-	// Here you could:
-	// - Update cached data
-	// - Sync with external systems
-	// - Update search indexes
-	// - Access previous product: productEvent.Data.PreviousProduct
-	// - Access metadata: productEvent.Data.Metadata
-
-	return nil
-}
-
-func handleProductDeleted(ctx context.Context, msg proto.Message) error {
-	productEvent := msg.(*eventv1.ProductDeletedEvent)
-	log.Printf("Product deleted: ID=%s, Name=%s, EventID=%s, Source=%s, Reason=%s",
-		productEvent.Product.Id,
-		productEvent.Product.Name,
-		productEvent.EventId,
-		productEvent.Data.Source,
-		productEvent.Data.Reason,
-	)
-
-	// Here you could:
-	// - Remove from search index
-	// - Clean up related data
-	// - Update analytics
-	// - Archive product information
-	// - Access metadata: productEvent.Data.Metadata
-
-	return nil
-}
-
-func handleProductPriceChanged(ctx context.Context, msg proto.Message) error {
-	productEvent := msg.(*eventv1.ProductPriceChangedEvent)
-	log.Printf("Product price changed: ID=%s, Name=%s, PreviousPrice=%s, NewPrice=%s, EventID=%s, Source=%s",
-		productEvent.Product.Id,
-		productEvent.Product.Name,
-		productEvent.Data.PreviousPrice,
-		productEvent.Data.NewPrice,
-		productEvent.EventId,
-		productEvent.Data.Source,
-	)
-
-	// Here you could:
-	// - Update pricing alerts
-	// - Recalculate recommendations
-	// - Update analytics dashboards
-	// - Send price change notifications
-	// - Access metadata: productEvent.Data.Metadata
-
-	return nil
 }
