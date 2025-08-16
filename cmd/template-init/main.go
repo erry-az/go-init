@@ -97,7 +97,22 @@ func main() {
 		fmt.Printf("%sWarning: Could not set git remote automatically: %v%s\n", colorYellow, err, colorReset)
 		fmt.Printf("Please set manually: git remote set-url origin %s.git\n", config.NewModule)
 	} else {
-		fmt.Printf("%s✅ Git remote updated to: %s.git%s\n", colorGreen, config.NewModule, colorReset)
+		// Show the actual URL that was set based on the host
+		var displayURL string
+		if strings.HasPrefix(config.NewModule, "github.com/") {
+			parts := strings.SplitN(config.NewModule, "/", 3)
+			if len(parts) >= 3 {
+				displayURL = fmt.Sprintf("git@github.com:%s/%s.git", parts[1], parts[2])
+			}
+		} else if strings.HasPrefix(config.NewModule, "gitlab.com/") {
+			parts := strings.SplitN(config.NewModule, "/", 3)
+			if len(parts) >= 3 {
+				displayURL = fmt.Sprintf("git@gitlab.com:%s/%s.git", parts[1], parts[2])
+			}
+		} else {
+			displayURL = fmt.Sprintf("https://%s.git", config.NewModule)
+		}
+		fmt.Printf("%s✅ Git remote updated to: %s%s\n", colorGreen, displayURL, colorReset)
 	}
 
 	fmt.Printf("\n%s✅ Template initialization completed!%s\n", colorGreen, colorReset)
@@ -350,8 +365,29 @@ func setGitRemote(newModule string) error {
 		return fmt.Errorf("not a git repository")
 	}
 
-	// Construct the git URL from the module name
-	gitURL := fmt.Sprintf("https://%s.git", newModule)
+	// Construct the SSH git URL from the module name
+	// Convert github.com/user/repo to git@github.com:user/repo.git
+	var gitURL string
+	if strings.HasPrefix(newModule, "github.com/") {
+		// Extract user/repo part from github.com/user/repo
+		parts := strings.SplitN(newModule, "/", 3)
+		if len(parts) >= 3 {
+			gitURL = fmt.Sprintf("git@github.com:%s/%s.git", parts[1], parts[2])
+		} else {
+			return fmt.Errorf("invalid GitHub module format: %s", newModule)
+		}
+	} else if strings.HasPrefix(newModule, "gitlab.com/") {
+		// Extract user/repo part from gitlab.com/user/repo
+		parts := strings.SplitN(newModule, "/", 3)
+		if len(parts) >= 3 {
+			gitURL = fmt.Sprintf("git@gitlab.com:%s/%s.git", parts[1], parts[2])
+		} else {
+			return fmt.Errorf("invalid GitLab module format: %s", newModule)
+		}
+	} else {
+		// For other hosts, fall back to HTTPS
+		gitURL = fmt.Sprintf("https://%s.git", newModule)
+	}
 	
 	// Execute git remote set-url origin command
 	cmd := fmt.Sprintf("git remote set-url origin %s", gitURL)
@@ -383,7 +419,25 @@ func showNextSteps(newModule string) {
 	fmt.Println("  2. make generate")
 	fmt.Println("  3. make test")
 	fmt.Printf("\n%s🔗 Manual steps:%s\n", colorBlue, colorReset)
-	fmt.Printf("  1. Review git remote: %s.git\n", newModule)
+	var remoteURL string
+	if strings.HasPrefix(newModule, "github.com/") {
+		parts := strings.SplitN(newModule, "/", 3)
+		if len(parts) >= 3 {
+			remoteURL = fmt.Sprintf("git@github.com:%s/%s.git", parts[1], parts[2])
+		} else {
+			remoteURL = fmt.Sprintf("%s.git", newModule)
+		}
+	} else if strings.HasPrefix(newModule, "gitlab.com/") {
+		parts := strings.SplitN(newModule, "/", 3)
+		if len(parts) >= 3 {
+			remoteURL = fmt.Sprintf("git@gitlab.com:%s/%s.git", parts[1], parts[2])
+		} else {
+			remoteURL = fmt.Sprintf("%s.git", newModule)
+		}
+	} else {
+		remoteURL = fmt.Sprintf("https://%s.git", newModule)
+	}
+	fmt.Printf("  1. Review git remote: %s\n", remoteURL)
 	fmt.Println("  2. Update README.md with your project details")
 	fmt.Println("  3. Start development: make dev")
 	fmt.Printf("\n%s🎉 Happy coding!%s\n", colorGreen, colorReset)
