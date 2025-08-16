@@ -1,13 +1,28 @@
 package consumer
 
 import (
+	"context"
 	"log"
 
-	"github.com/ThreeDotsLabs/watermill/message"
-	eventv1 "github.com/erry-az/go-init/proto/event/v1"
+	"github.com/ThreeDotsLabs/watermill/components/cqrs"
+	eventv1 "github.com/erry-az/go-sample/proto/event/v1"
 )
 
-func HandleUserCreated(pe *eventv1.UserCreatedEvent, m *message.Message) error {
+type UserConsumer struct{}
+
+func NewUserConsumer() *UserConsumer {
+	return &UserConsumer{}
+}
+
+func (u *UserConsumer) AddHandlers(eventProcessor *cqrs.EventProcessor) error {
+	return eventProcessor.AddHandlers(
+		cqrs.NewEventHandler("HandleUserCreated", u.HandleUserCreated),
+		cqrs.NewEventHandler("HandleUserUpdated", u.HandleUserUpdated),
+		cqrs.NewEventHandler("HandleUserDeleted", u.HandleUserDeleted),
+	)
+}
+
+func (u *UserConsumer) HandleUserCreated(ctx context.Context, pe *eventv1.UserCreatedEvent) error {
 	log.Printf("User created: ID=%s, Name=%s, Email=%s, EventID=%s, Source=%s",
 		pe.User.Id,
 		pe.User.Name,
@@ -26,7 +41,7 @@ func HandleUserCreated(pe *eventv1.UserCreatedEvent, m *message.Message) error {
 	return nil
 }
 
-func HandleUserUpdated(pe *eventv1.UserUpdatedEvent, m *message.Message) error {
+func (u *UserConsumer) HandleUserUpdated(ctx context.Context, pe *eventv1.UserUpdatedEvent) error {
 	log.Printf("User updated: ID=%s, Name=%s, Email=%s, EventID=%s, Source=%s, ChangedFields=%v",
 		pe.User.Id,
 		pe.User.Name,
@@ -46,7 +61,7 @@ func HandleUserUpdated(pe *eventv1.UserUpdatedEvent, m *message.Message) error {
 	return nil
 }
 
-func HandleUserDeleted(pe *eventv1.UserDeletedEvent, m *message.Message) error {
+func (u *UserConsumer) HandleUserDeleted(ctx context.Context, pe *eventv1.UserDeletedEvent) error {
 	log.Printf("User deleted: ID=%s, Name=%s, EventID=%s, Source=%s, Reason=%s",
 		pe.User.Id,
 		pe.User.Name,

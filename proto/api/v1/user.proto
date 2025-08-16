@@ -7,7 +7,7 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "buf/validate/validate.proto";
 
-option go_package = "github.com/erry-az/go-init/proto/api/v1";
+option go_package = "github.com/erry-az/go-sample/proto/api/v1";
 
 // User represents a user entity
 message User {
@@ -22,8 +22,15 @@ message User {
 
 // CreateUserRequest represents the request to create a new user
 message CreateUserRequest {
-  string name = 1;
-  string email = 2;
+  string name = 1 [
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 255
+  ];
+  string email = 2 [
+    (buf.validate.field).string.email = true,
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 255
+  ];
 }
 
 // CreateUserResponse represents the response after creating a user
@@ -48,8 +55,15 @@ message UpdateUserRequest {
   string id = 1 [
     (buf.validate.field).string.uuid = true
   ];
-  string name = 2;
-  string email = 3;
+  string name = 2 [
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 255
+  ];
+  string email = 3 [
+    (buf.validate.field).string.email = true,
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 255
+  ];
 }
 
 // UpdateUserResponse represents the response after updating a user

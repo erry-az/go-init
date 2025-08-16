@@ -1,4 +1,4 @@
-.PHONY: all build clean test lint generate proto sqlc mocks db-migrate db-migration-create db-migrate-validate db-migrate-status db-schema-inspect up down run status dev menu help
+.PHONY: all build clean test lint generate proto sqlc mocks migrate new-migration migration-status up down restart stop reset run dev check setup status menu help
 
 ## Default target - generate code and build application
 all: generate build
@@ -54,47 +54,58 @@ mocks:
 		echo "Repository interface not found, skipping mock generation"; \
 	fi
 
-## Apply pending database migrations
-db-migrate:
+## Run database migrations using Docker
+migrate:
 	@echo "🔄 Running database migrations..."
-	atlas migrate apply --env local
+	docker compose run --rm migrate migrate apply --env local
 
-## Create a new database migration file
-db-migration-create:
+## Create new migration file using Docker
+new-migration:
 	@echo "➕ Creating new migration..."
-	atlas migrate hash --env local
+	docker compose run --rm migrate migrate hash --env local
 	@read -p "Enter migration name: " name; \
-	atlas migrate diff $$name --env local
+	docker compose run --rm migrate migrate diff $$name --env local
 
-## Validate database migration files
-db-migrate-validate:
-	@echo "✅ Validating migrations..."
-	atlas migrate validate --env local
-
-## Check database migration status
-db-migrate-status:
+## Check migration status using Docker
+migration-status:
 	@echo "📊 Checking migration status..."
-	atlas migrate status --env local
+	docker compose run --rm migrate migrate status --env local
 
-## Inspect database and generate schema file
-db-schema-inspect:
-	@echo "🔍 Inspecting database schema..."
-	atlas schema inspect --env local > db/schema.sql
+## Start development environment
+dev:
+	@echo "🐳 Starting development environment..."
+	docker compose up --build --watch && docker image prune -f
 
-## Start PostgreSQL and RabbitMQ services
+## Start services in background
 up:
-	@echo "🐳 Starting services..."
-	docker-compose up -d
+	@echo "🐳 Starting services in background..."
+	docker compose up --build -d && docker image prune -f
 
-## Stop all Docker services
-down:
+## Stop services
+stop:
 	@echo "🛑 Stopping services..."
-	docker-compose down
+	docker compose down
 
-## Start services and run the application
-run: up
-	@echo "🚀 Running application..."
+## Restart services
+restart:
+	@echo "🔄 Restarting services..."
+	docker compose down && docker compose up --build -d && docker image prune -f
+
+## Reset all data (stop + remove volumes)
+reset:
+	@echo "🗑️ Resetting all data..."
+	docker compose down -v
+
+## Run application locally (without Docker)
+run:
+	@echo "🚀 Running application locally..."
 	go run ./cmd/server
+
+## Quick code validation
+check: lint test
+
+## Full project setup
+setup: generate build test
 
 ## Show project status (git + docker services)
 status:
@@ -106,12 +117,16 @@ status:
 	@echo "Docker Services:"
 	@docker-compose ps 2>/dev/null || echo "Docker services not running"
 
-## Launch interactive development menu with fzf
-dev:
+## Launch interactive development menu (alias for dev)
+menu:
 	@./tools/scripts/dev-menu.sh
 
-## Launch interactive development menu (alias for dev)
-menu: dev
+## Initialize this repo as a template for new projects
+template-init:
+	@go run ./cmd/template-init
+	go mod tidy
+	make generate
+	make test
 
 ## Show all available Makefile targets with descriptions
 help:

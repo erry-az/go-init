@@ -1,0 +1,28 @@
+FROM golang:1.24-alpine
+
+WORKDIR /app
+
+# Install dependencies
+RUN apk add --no-cache git
+
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Copy Docker config to correct location
+COPY files/config.docker.yaml /app/files/config.docker.yaml
+
+# Build the applications
+RUN go build -o /app/bin/server ./cmd/server/main.go
+RUN go build -o /app/bin/consumer ./cmd/consumer/main.go
+
+# Expose ports
+EXPOSE 8080 9090
+
+# Default command (will be overridden by compose)
+CMD ["/app/bin/server"]

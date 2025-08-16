@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "api/v1/product.proto";
 import "options/descriptor.proto";
 
-option go_package = "github.com/erry-az/go-init/proto/event/v1";
+option go_package = "github.com/erry-az/go-sample/proto/event/v1";
 
 // ProductCreatedEvent represents a product creation event
 message ProductCreatedEvent {

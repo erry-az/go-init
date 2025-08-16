@@ -1,6 +1,6 @@
 package config
 
 type DatabaseConfig struct {
-	GoInitDbUrl string `yaml:"go_init"`
-	PgMqUrl     string `yaml:"pg_mq"`
+	DbDsn   string `mapstructure:"db_dsn"`
+	PgMqUrl string `mapstructure:"pg_mq"`
 }

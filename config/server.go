@@ -1,6 +1,6 @@
 package config
 
 type ServerConfig struct {
-	GrpcPort string `envconfig:"GRPC_PORT" default:"8080"`
-	HttpPort string `envconfig:"HTTP_PORT" default:"8081"`
+	GrpcPort string `mapstructure:"grpc_port" default:"8080"`
+	HttpPort string `mapstructure:"http_port" default:"8081"`
 }

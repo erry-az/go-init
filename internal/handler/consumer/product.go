@@ -1,13 +1,29 @@
 package consumer
 
 import (
+	"context"
 	"log"
 
-	"github.com/ThreeDotsLabs/watermill/message"
-	eventv1 "github.com/erry-az/go-init/proto/event/v1"
+	"github.com/ThreeDotsLabs/watermill/components/cqrs"
+	eventv1 "github.com/erry-az/go-sample/proto/event/v1"
 )
 
-func HandleProductCreated(pe *eventv1.ProductCreatedEvent, m *message.Message) error {
+type ProductConsumer struct{}
+
+func NewProductConsumer() *ProductConsumer {
+	return &ProductConsumer{}
+}
+
+func (p *ProductConsumer) AddHandlers(eventProcessor *cqrs.EventProcessor) error {
+	return eventProcessor.AddHandlers(
+		cqrs.NewEventHandler("HandleProductCreated", p.HandleProductCreated),
+		cqrs.NewEventHandler("HandleProductUpdated", p.HandleProductUpdated),
+		cqrs.NewEventHandler("HandleProductDeleted", p.HandleProductDeleted),
+		cqrs.NewEventHandler("HandleProductPriceChanged", p.HandleProductPriceChanged),
+	)
+}
+
+func (p *ProductConsumer) HandleProductCreated(ctx context.Context, pe *eventv1.ProductCreatedEvent) error {
 	log.Printf("Product created: ID=%s, Name=%s, Price=%s, EventID=%s, Source=%s",
 		pe.Product.Id,
 		pe.Product.Name,
@@ -26,7 +42,7 @@ func HandleProductCreated(pe *eventv1.ProductCreatedEvent, m *message.Message) e
 	return nil
 }
 
-func HandleProductUpdated(pe *eventv1.ProductUpdatedEvent, m *message.Message) error {
+func (p *ProductConsumer) HandleProductUpdated(ctx context.Context, pe *eventv1.ProductUpdatedEvent) error {
 	log.Printf("Product updated: ID=%s, Name=%s, Price=%s, EventID=%s, Source=%s, ChangedFields=%v",
 		pe.Product.Id,
 		pe.Product.Name,
@@ -46,7 +62,7 @@ func HandleProductUpdated(pe *eventv1.ProductUpdatedEvent, m *message.Message) e
 	return nil
 }
 
-func HandleProductDeleted(pe *eventv1.ProductDeletedEvent, m *message.Message) error {
+func (p *ProductConsumer) HandleProductDeleted(ctx context.Context, pe *eventv1.ProductDeletedEvent) error {
 	log.Printf("Product deleted: ID=%s, Name=%s, EventID=%s, Source=%s, Reason=%s",
 		pe.Product.Id,
 		pe.Product.Name,
@@ -65,7 +81,7 @@ func HandleProductDeleted(pe *eventv1.ProductDeletedEvent, m *message.Message) e
 	return nil
 }
 
-func HandleProductPriceChanged(pe *eventv1.ProductPriceChangedEvent, m *message.Message) error {
+func (p *ProductConsumer) HandleProductPriceChanged(ctx context.Context, pe *eventv1.ProductPriceChangedEvent) error {
 	log.Printf("Product price changed: ID=%s, Name=%s, PreviousPrice=%s, NewPrice=%s, EventID=%s, Source=%s",
 		pe.Product.Id,
 		pe.Product.Name,

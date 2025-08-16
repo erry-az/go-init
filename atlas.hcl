@@ -1,6 +1,7 @@
 env "local" {
   src = "file://db/schema.sql"
-  dev = "docker://postgres/15/dev?search_path=public"
+  url = "postgres://postgres:postgres@postgres-main:5432/go_sample_db?sslmode=disable"
+  dev = "docker://postgres/16/dev?search_path=public"
   migration {
     dir = "file://db/migrations"
   }

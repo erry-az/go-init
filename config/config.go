@@ -1,27 +1,40 @@
 package config
 
 import (
+	"log/slog"
+
 	"github.com/spf13/viper"
 )
 
 // Config holds the application configuration
 type Config struct {
-	DatabaseURL string `mapstructure:"database_url"`
+	Servers   ServerConfig   `mapstructure:"servers"`
+	Databases DatabaseConfig `mapstructure:"databases"`
+	Consumers ConsumerConfig `mapstructure:"consumers"`
 }
 
 // New loads the config file into Config struct
 func New() (*Config, error) {
 	var cfg Config
 
-	viper.SetConfigName("config")
+	// Enable environment variable support first
+	viper.AutomaticEnv()
+
+	// Check if we're in Docker environment
+	configName := "config"
+	if isDocker() {
+		configName = "config.docker"
+	}
+
+	slog.Info("Loading configuration from " + configName)
+
+	viper.SetConfigName(configName)
 	viper.SetConfigType("yaml")
 
 	// More option of config path can be added here
-	viper.AddConfigPath("/app/config/") // Staging, Production or Docker
+	viper.AddConfigPath("/app/files/")  // Docker
 	viper.AddConfigPath("files/")       // Unix Local
 	viper.AddConfigPath("../../files/") // Windows Local
-
-	viper.AutomaticEnv()
 
 	// Get the config file
 	if err := viper.ReadInConfig(); err != nil {
@@ -34,4 +47,18 @@ func New() (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+// isDocker checks if running in Docker environment
+func isDocker() bool {
+	// Check common Docker environment indicators
+	dockerEnv := viper.GetString("DOCKER_ENV")
+	dbHost := viper.GetString("DB_HOST")
+	
+	slog.Info("Docker environment check", "DOCKER_ENV", dockerEnv, "DB_HOST", dbHost)
+	
+	if dockerEnv != "" || dbHost != "" {
+		return true
+	}
+	return false
 }

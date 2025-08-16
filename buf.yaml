@@ -1,6 +1,6 @@
 version: v2
 modules:
-  - name: github.com/erry-az/go-init
+  - name: github.com/erry-az/go-sample
     path: proto
 
 deps:

@@ -1,6 +1,7 @@
 package watmil
 
 import (
+	"context"
 	"database/sql"
 	"time"
 
@@ -14,16 +15,21 @@ import (
 	wotel "github.com/voi-oss/watermill-opentelemetry/pkg/opentelemetry"
 )
 
-func NewSubscriber(db *sql.DB, logger watermill.LoggerAdapter) (*cqrs.EventProcessor, error) {
+type Subscriber struct {
+	router         *message.Router
+	logger         watermill.LoggerAdapter
+	eventProcessor *cqrs.EventProcessor
+}
+
+func NewSubscriber(db *sql.DB, logger watermill.LoggerAdapter, mid ...message.HandlerMiddleware) (*Subscriber, error) {
 	router, err := message.NewRouter(message.RouterConfig{}, logger)
 	if err != nil {
 		return nil, err
 	}
 
 	router.AddPlugin(plugin.SignalsHandler)
-	router.AddMiddleware(middleware.Recoverer)
-	router.AddMiddleware(wotelfloss.ExtractRemoteParentSpanContext())
-	router.AddMiddleware(wotel.Trace())
+	router.AddMiddleware(middleware.Recoverer, wotelfloss.ExtractRemoteParentSpanContext(), wotel.Trace())
+	router.AddMiddleware(mid...)
 
 	eventProcessor, err := cqrs.NewEventProcessorWithConfig(
 		router,
@@ -61,6 +67,24 @@ func NewSubscriber(db *sql.DB, logger watermill.LoggerAdapter) (*cqrs.EventProce
 			Logger: logger,
 		},
 	)
-	
-	return eventProcessor, nil
+
+	return &Subscriber{
+		router:         router,
+		logger:         logger,
+		eventProcessor: eventProcessor,
+	}, nil
+}
+
+func (s *Subscriber) RegisterHandlers(handlers ...func(eventProcessor *cqrs.EventProcessor) error) error {
+	for _, handler := range handlers {
+		if err := handler(s.eventProcessor); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Subscriber) Run(ctx context.Context) error {
+	return s.router.Run(ctx)
 }

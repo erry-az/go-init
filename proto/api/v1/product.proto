@@ -7,7 +7,7 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "buf/validate/validate.proto";
 
-option go_package = "github.com/erry-az/go-init/proto/api/v1";
+option go_package = "github.com/erry-az/go-sample/proto/api/v1";
 
 // Product represents a product entity
 message Product {
@@ -22,8 +22,13 @@ message Product {
 
 // CreateProductRequest represents the request to create a new product
 message CreateProductRequest {
-  string name = 1;
-  string price = 2;
+  string name = 1 [
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 255
+  ];
+  string price = 2 [
+    (buf.validate.field).string.pattern = "^[0-9]+(\\.[0-9]+)?$"
+  ];
 }
 
 // CreateProductResponse represents the response after creating a product
@@ -33,7 +38,9 @@ message CreateProductResponse {
 
 // GetProductRequest represents the request to get a product by ID
 message GetProductRequest {
-  string id = 1;
+  string id = 1 [
+    (buf.validate.field).string.uuid = true
+  ];
 }
 
 // GetProductResponse represents the response containing a product
@@ -46,8 +53,13 @@ message UpdateProductRequest {
   string id = 1 [
     (buf.validate.field).string.uuid = true
   ];
-  string name = 2;
-  string price = 3;
+  string name = 2 [
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 255
+  ];
+  string price = 3 [
+    (buf.validate.field).string.pattern = "^[0-9]+(\\.[0-9]+)?$"
+  ];
 }
 
 // UpdateProductResponse represents the response after updating a product
@@ -90,8 +102,12 @@ message BulkUpdatePricesRequest {
 
 // ProductPriceUpdate represents a single product price update
 message ProductPriceUpdate {
-  string id = 1;
-  string price = 2;
+  string id = 1 [
+    (buf.validate.field).string.uuid = true
+  ];
+  string price = 2 [
+    (buf.validate.field).string.pattern = "^[0-9]+(\\.[0-9]+)?$"
+  ];
 }
 
 // BulkUpdatePricesResponse represents the response after updating multiple prices

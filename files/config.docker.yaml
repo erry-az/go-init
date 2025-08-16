@@ -1,0 +1,15 @@
+servers:
+  grpc_port: "9090"
+  http_port: "8080"
+databases:
+  db_dsn: "postgres://postgres:postgres@postgres-main:5432/go_sample_db?sslmode=disable"
+  pg_mq: "postgres://postgres:postgres@postgres-mq:5432/pg_mq_db?sslmode=disable"
+consumers:
+  retry:
+    type: "default"
+    max_retries: 3
+    initial_interval: "100ms"
+    max_interval: "30s"
+    multiplier: 2.0
+    max_elapsed_time: "5m"
+    randomization_factor: 0.1

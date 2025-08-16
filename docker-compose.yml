@@ -1,30 +1,148 @@
 services:
-  postgres:
+  # Main PostgreSQL database
+  postgres-main:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: go_init_db
+      POSTGRES_DB: go_sample_db
     ports:
       - "5432:5432"
     volumes:
-      - .postgres-data:/var/lib/postgresql/data
+      - postgres_main_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  rabbitmq:
-    image: rabbitmq:3.12-management-alpine
+  # PostgreSQL for message queue
+  postgres-mq:
+    image: postgres:16-alpine
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pg_mq_db
     ports:
-      - "5672:5672"   # AMQP port
-      - "15672:15672" # Management interface
+      - "5433:5432"
+    volumes:
+      - postgres_mq_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # Atlas migration service
+  migrate:
+    image: arigaio/atlas:latest
+    depends_on:
+      postgres-main:
+        condition: service_healthy
+    volumes:
+      - .:/work
+    working_dir: /work
+    command: ["migrate", "apply", "--env", "local"]
+
+  # HTTP+gRPC Server with live reload
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    depends_on:
+      postgres-main:
+        condition: service_healthy
+      postgres-mq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"  # HTTP
+      - "9090:9090"  # gRPC
+    environment:
+      - DOCKER_ENV=true
+      - DB_HOST=postgres-main
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=go_sample_db
+      - MQ_DB_HOST=postgres-mq
+      - MQ_DB_PORT=5432
+      - MQ_DB_USER=postgres
+      - MQ_DB_PASSWORD=postgres
+      - MQ_DB_NAME=pg_mq_db
+    command: ["/app/bin/server"]
+    develop:
+      watch:
+        - action: rebuild
+          path: ./go.mod
+        - action: rebuild
+          path: ./go.sum
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - tmp/
+            - .git/
+            - .gitignore
+            - README.md
+            - Dockerfile*
+            - docker-compose*
+        - action: rebuild
+          path: ./cmd/
+        - action: rebuild
+          path: ./internal/
+        - action: rebuild
+          path: ./pkg/
+
+  # Consumer service with live reload
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    depends_on:
+      postgres-main:
+        condition: service_healthy
+      postgres-mq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      - DOCKER_ENV=true
+      - DB_HOST=postgres-main
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=go_sample_db
+      - MQ_DB_HOST=postgres-mq
+      - MQ_DB_PORT=5432
+      - MQ_DB_USER=postgres
+      - MQ_DB_PASSWORD=postgres
+      - MQ_DB_NAME=pg_mq_db
+    command: ["/app/bin/consumer"]
+    develop:
+      watch:
+        - action: rebuild
+          path: ./go.mod
+        - action: rebuild
+          path: ./go.sum
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - tmp/
+            - .git/
+            - .gitignore
+            - README.md
+            - Dockerfile*
+            - docker-compose*
+        - action: rebuild
+          path: ./cmd/
+        - action: rebuild
+          path: ./internal/
+        - action: rebuild
+          path: ./pkg/
+
+volumes:
+  postgres_main_data:
+  postgres_mq_data:
