@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/erry-az/go-sample/internal/domain"
+	"github.com/erry-az/go-init/internal/domain"
 )
 
 // ProductUsecase defines the business logic interface for product operations

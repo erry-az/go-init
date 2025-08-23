@@ -7,8 +7,7 @@ import (
 	"net"
 
 	"buf.build/go/protovalidate"
-	"github.com/erry-az/go-sample/internal/app"
-	"github.com/erry-az/go-sample/proto/api/v1"
+	handlergrpc "github.com/erry-az/go-init/internal/handler/grpc"
 	protovalidateMidleware "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -16,30 +15,26 @@ import (
 
 type GRPCServer struct {
 	server *grpc.Server
-	app    *app.App
 }
 
-func NewGRPCServer(application *app.App) (*GRPCServer, error) {
+type GRPCServices struct {
+	UserService    *handlergrpc.UserService
+	ProductService *handlergrpc.ProductService
+}
+
+func NewGRPCServer(services GRPCServices) (*GRPCServer, error) {
 	validator, err := protovalidate.New()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create validator: %w", err)
 	}
 
-	// Create gRPC server
+	// Create gRPC endpoint
 	server := grpc.NewServer(
 		grpc.UnaryInterceptor(protovalidateMidleware.UnaryServerInterceptor(validator)),
 	)
 
-	// Register services
-	v1.RegisterUserServiceServer(server, application.UserService)
-	v1.RegisterProductServiceServer(server, application.ProductService)
-
-	// Enable reflection for development
-	reflection.Register(server)
-
 	return &GRPCServer{
 		server: server,
-		app:    application,
 	}, nil
 }
 
@@ -49,22 +44,17 @@ func (s *GRPCServer) Start(ctx context.Context, port string) error {
 		return fmt.Errorf("failed to listen on port %s: %w", port, err)
 	}
 
-	log.Printf("gRPC server starting on port %s", port)
+	log.Printf("gRPC endpoint starting on port %s", port)
 
-	// Start server in goroutine
-	go func() {
-		if err := s.server.Serve(lis); err != nil {
-			log.Printf("gRPC server error: %v", err)
-		}
-	}()
+	reflection.Register(s.server)
 
-	// Wait for context cancellation
-	<-ctx.Done()
+	return s.server.Serve(lis)
+}
 
-	log.Println("Shutting down gRPC server...")
-	s.server.GracefulStop()
-
-	return nil
+func (s *GRPCServer) RegisterService(services ...func(s *grpc.Server)) {
+	for _, service := range services {
+		service(s.server)
+	}
 }
 
 func (s *GRPCServer) Stop() {

@@ -26,7 +26,7 @@ pkgs.mkShell {
     # Create .zshrc in the .config/zsh directory
     cat > "$ZDOTDIR/.zshrc" << 'EOF'
 # Source your existing zshrc if it exists
-[[ -f ~/.zshrc ]] && source ~/.zshrc
+# [[ -f ~/.zshrc ]] && source ~/.zshrc
 
 # Environment setup
 ${environment.setup}

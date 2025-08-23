@@ -7,7 +7,7 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "buf/validate/validate.proto";
 
-option go_package = "github.com/erry-az/go-sample/proto/api/v1";
+option go_package = "github.com/erry-az/go-init/proto/api/v1";
 
 // User represents a user entity
 message User {

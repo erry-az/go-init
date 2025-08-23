@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: go_sample_db
+      POSTGRES_DB: go_init_db
     ports:
       - "5432:5432"
     volumes:
@@ -65,7 +65,7 @@ services:
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=postgres
-      - DB_NAME=go_sample_db
+      - DB_NAME=go_init_db
       - MQ_DB_HOST=postgres-mq
       - MQ_DB_PORT=5432
       - MQ_DB_USER=postgres
@@ -113,7 +113,7 @@ services:
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=postgres
-      - DB_NAME=go_sample_db
+      - DB_NAME=go_init_db
       - MQ_DB_HOST=postgres-mq
       - MQ_DB_PORT=5432
       - MQ_DB_USER=postgres

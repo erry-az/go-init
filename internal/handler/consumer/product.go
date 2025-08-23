@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
-	eventv1 "github.com/erry-az/go-sample/proto/event/v1"
+	eventv1 "github.com/erry-az/go-init/proto/event/v1"
 )
 
 type ProductConsumer struct{}

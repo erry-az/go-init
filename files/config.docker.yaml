@@ -2,7 +2,7 @@ servers:
   grpc_port: "9090"
   http_port: "8080"
 databases:
-  db_dsn: "postgres://postgres:postgres@postgres-main:5432/go_sample_db?sslmode=disable"
+  db_dsn: "postgres://postgres:postgres@postgres-main:5432/go_init_db?sslmode=disable"
   pg_mq: "postgres://postgres:postgres@postgres-mq:5432/pg_mq_db?sslmode=disable"
 consumers:
   retry:

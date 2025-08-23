@@ -2,13 +2,13 @@ package app
 
 import (
 	"context"
-	"database/sql"
 	"log/slog"
 
 	"github.com/ThreeDotsLabs/watermill"
-	"github.com/erry-az/go-sample/config"
-	"github.com/erry-az/go-sample/internal/handler/consumer"
-	"github.com/erry-az/go-sample/pkg/watmil"
+	"github.com/erry-az/go-init/config"
+	"github.com/erry-az/go-init/internal/handler/consumer"
+	"github.com/erry-az/go-init/pkg/watmil"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // ConsumerApp represents the consumer application
@@ -24,27 +24,27 @@ func NewConsumerApp(cfg *config.Config) (*ConsumerApp, error) {
 	productConsumer := consumer.NewProductConsumer()
 	userConsumer := consumer.NewUserConsumer()
 
-	// Create standard SQL connection for Watermill
-	sqlDB, err := sql.Open("pgx", cfg.Databases.PgMqUrl)
+	// Create pgxpool connection for SQLC
+	dbPool, err := pgxpool.New(context.Background(), cfg.Databases.PgMqUrl)
 	if err != nil {
-		slog.Error("Failed to connect to SQL database", slog.Any("error", err))
+		slog.Error("Failed to create pgx pool ", slog.Any("error", err))
 		return nil, err
 	}
+	defer dbPool.Close()
 
-	// Test SQL database connection
-	if err := sqlDB.Ping(); err != nil {
-		slog.Error("Failed to ping SQL database", slog.Any("error", err))
-		sqlDB.Close()
+	// Test pgxpool connection
+	if err := dbPool.Ping(context.Background()); err != nil {
+		slog.Error("Failed to ping database pool ", slog.Any("error", err))
 		return nil, err
 	}
 
 	logger := watermill.NewSlogLogger(slog.Default())
 
-	subscriber, err := watmil.NewSubscriber(sqlDB, logger,
+	subscriber, err := watmil.NewSubscriber(dbPool, logger,
 		cfg.Consumers.Retry.MiddlewareRetry(logger).Middleware)
 	if err != nil {
 		slog.Error("Failed to subscribe to SQL database", slog.Any("error", err))
-		sqlDB.Close()
+		dbPool.Close()
 		return nil, err
 	}
 

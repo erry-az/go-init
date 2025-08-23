@@ -1,19 +1,22 @@
 package watmil
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
 	watersql "github.com/ThreeDotsLabs/watermill-sql/v2/pkg/sql"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	wotelfloss "github.com/dentech-floss/watermill-opentelemetry-go-extra/pkg/opentelemetry"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	wotel "github.com/voi-oss/watermill-opentelemetry/pkg/opentelemetry"
 )
 
-func NewPublisher(db *sql.DB, logger watermill.LoggerAdapter) (*cqrs.EventBus, error) {
+// NewPublisher creates a new event bus using pgxpool.Pool for database operations.
+// The pool is converted to *sql.DB using stdlib connector for watermill-sql compatibility.
+func NewPublisher(pool *pgxpool.Pool, logger watermill.LoggerAdapter) (*cqrs.EventBus, error) {
 	publisher, err := watersql.NewPublisher(
-		db,
+		stdlib.OpenDBFromPool(pool),
 		watersql.PublisherConfig{
 			SchemaAdapter:        watersql.DefaultPostgreSQLSchema{},
 			AutoInitializeSchema: true,

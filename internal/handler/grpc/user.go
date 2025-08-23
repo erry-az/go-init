@@ -3,9 +3,9 @@ package grpc
 import (
 	"context"
 
-	"github.com/erry-az/go-sample/internal/domain"
-	"github.com/erry-az/go-sample/internal/usecase"
-	"github.com/erry-az/go-sample/proto/api/v1"
+	"github.com/erry-az/go-init/internal/domain"
+	"github.com/erry-az/go-init/internal/usecase"
+	"github.com/erry-az/go-init/proto/api/v1"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

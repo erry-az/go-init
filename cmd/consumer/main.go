@@ -1,12 +1,12 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
 
-	"github.com/erry-az/go-sample/config"
-	"github.com/erry-az/go-sample/internal/app"
-	"github.com/erry-az/go-sample/internal/server"
+	"github.com/erry-az/go-init/config"
+	"github.com/erry-az/go-init/internal/app"
 )
 
 func main() {
@@ -26,7 +26,7 @@ func main() {
 		return
 	}
 
-	err = server.NewConsumer(consumerApp)
+	err = consumerApp.Run(context.Background())
 	if err != nil {
 		slog.Error("Error loading consumer:", slog.Any("error", err))
 	}

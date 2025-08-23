@@ -15,11 +15,22 @@
     # Environment variables
     export EDITOR=nvim
 
-    # Go environment variables
-    export GOROOT=${pkgs.go}/share/go
+    # Go environment variables - ensure Nix Go takes priority
+    export GOROOT=${pkgs.go_1_24}/share/go
     export GOPATH=$HOME/go
     export GOBIN=$GOPATH/bin
-    export PATH=$GOBIN:$PATH
+    
+    # Prepend Nix paths to ensure they take priority over system installations
+    export PATH=${pkgs.go_1_24}/bin:$GOBIN:$PATH
+    
+    # Disable Go toolchain auto-download to use Nix-provided Go
+    export GOTOOLCHAIN=local
+    
+    # Clean Go module cache to avoid version conflicts
+    if [ -d "$GOPATH/pkg/mod" ]; then
+      echo "🧹 Cleaning Go module cache to avoid version conflicts..."
+      go clean -modcache 2>/dev/null || true
+    fi
 
     # FZF theme configuration
     export FZF_DEFAULT_OPTS="

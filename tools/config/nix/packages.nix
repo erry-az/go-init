@@ -2,8 +2,8 @@
 {
   # Development packages organized by category
   packages = with pkgs; [
-    # Go development tools
-    go
+    # Go development tools - use specific version to avoid conflicts
+    go_1_24
     gopls
     golangci-lint
     gotools

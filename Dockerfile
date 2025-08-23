@@ -15,7 +15,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN go build -o server cmd/server/main.go
+RUN go build -o endpoint cmd/server/main.go
 RUN go build -o consumer cmd/consumer/main.go
 
 # Final stage

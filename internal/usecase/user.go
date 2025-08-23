@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
-	"github.com/erry-az/go-sample/internal/domain"
-	"github.com/erry-az/go-sample/internal/repository/sqlc"
-	"github.com/erry-az/go-sample/proto/api/v1"
-	eventv1 "github.com/erry-az/go-sample/proto/event/v1"
+	"github.com/erry-az/go-init/internal/domain"
+	"github.com/erry-az/go-init/internal/repository/sqlc"
+	"github.com/erry-az/go-init/proto/api/v1"
+	eventv1 "github.com/erry-az/go-init/proto/event/v1"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

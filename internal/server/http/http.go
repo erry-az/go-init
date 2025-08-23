@@ -1,4 +1,4 @@
-package server
+package http
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/erry-az/go-sample/proto/api/v1"
+	"github.com/erry-az/go-init/proto/api/v1"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -33,7 +33,7 @@ func NewHTTPServer(grpcPort string) (*HTTPServer, error) {
 	conn, err := grpc.NewClient("localhost:"+grpcPort,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return nil, fmt.Errorf("failed to dial gRPC server: %w", err)
+		return nil, fmt.Errorf("failed to dial gRPC endpoint: %w", err)
 	}
 
 	// Create HTTP gateway mux
@@ -72,25 +72,25 @@ func (s *HTTPServer) Start(ctx context.Context, port string) error {
 	// Mount swagger endpoints
 	s.setupSwaggerRoutes(mainMux)
 
-	// Create HTTP server
+	// Create HTTP endpoint
 	s.server = &http.Server{
 		Addr:    ":" + port,
 		Handler: mainMux,
 	}
 
-	log.Printf("HTTP server starting on port %s", port)
+	log.Printf("HTTP endpoint starting on port %s", port)
 
-	// Start server in goroutine
+	// Start endpoint in goroutine
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Printf("HTTP server error: %v", err)
+			log.Printf("HTTP endpoint error: %v", err)
 		}
 	}()
 
 	// Wait for context cancellation
 	<-ctx.Done()
 
-	log.Println("Shutting down HTTP server...")
+	log.Println("Shutting down HTTP endpoint...")
 	return s.server.Shutdown(context.Background())
 }
 

@@ -2,7 +2,6 @@ package watmil
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
@@ -12,6 +11,8 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/ThreeDotsLabs/watermill/message/router/plugin"
 	wotelfloss "github.com/dentech-floss/watermill-opentelemetry-go-extra/pkg/opentelemetry"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	wotel "github.com/voi-oss/watermill-opentelemetry/pkg/opentelemetry"
 )
 
@@ -21,7 +22,9 @@ type Subscriber struct {
 	eventProcessor *cqrs.EventProcessor
 }
 
-func NewSubscriber(db *sql.DB, logger watermill.LoggerAdapter, mid ...message.HandlerMiddleware) (*Subscriber, error) {
+// NewSubscriber creates a new subscriber using pgxpool.Pool for database operations.
+// The pool is converted to *sql.DB using stdlib connector for watermill-sql compatibility.
+func NewSubscriber(pool *pgxpool.Pool, logger watermill.LoggerAdapter, mid ...message.HandlerMiddleware) (*Subscriber, error) {
 	router, err := message.NewRouter(message.RouterConfig{}, logger)
 	if err != nil {
 		return nil, err
@@ -39,7 +42,7 @@ func NewSubscriber(db *sql.DB, logger watermill.LoggerAdapter, mid ...message.Ha
 			},
 			SubscriberConstructor: func(params cqrs.EventProcessorSubscriberConstructorParams) (message.Subscriber, error) {
 				return watersql.NewSubscriber(
-					db,
+					stdlib.OpenDBFromPool(pool),
 					watersql.SubscriberConfig{
 						SchemaAdapter:    watersql.DefaultPostgreSQLSchema{},
 						OffsetsAdapter:   watersql.DefaultPostgreSQLOffsetsAdapter{},

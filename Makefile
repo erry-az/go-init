@@ -1,12 +1,7 @@
-.PHONY: all build clean test lint generate proto sqlc mocks migrate new-migration migration-status up down restart stop reset run dev check setup status menu help
+.PHONY: all build clean test lint generate proto sqlc mocks migrate new-migration migration-status up down restart stop reset run dev check setup status menu help shell
 
 ## Default target - generate code and build application
 all: generate build
-
-## Initialize project - setup environment and generate code
-init:
-	@echo "🚀 Initializing project..."
-	@nix-shell --run "make generate"
 
 ## Build the application binary
 build:
@@ -73,13 +68,13 @@ migration-status:
 
 ## Start development environment
 dev:
-	@echo "🐳 Starting development environment..."
-	docker compose up --build --watch && docker image prune -f
+	@echo "❄️ Starting development environment..."
+	@nix --extra-experimental-features "nix-command flakes" develop
 
 ## Start services in background
 up:
 	@echo "🐳 Starting services in background..."
-	docker compose up --build -d && docker image prune -f
+	docker compose up --build --watch && docker image prune -f
 
 ## Stop services
 stop:
@@ -122,11 +117,16 @@ menu:
 	@./tools/scripts/dev-menu.sh
 
 ## Initialize this repo as a template for new projects
-template-init:
+init:
 	@go run ./cmd/template-init
 	go mod tidy
 	make generate
 	make test
+
+## Init shell development environment
+shell:
+	@echo "❄️ Starting shell development environment..."
+	@nix-shell
 
 ## Show all available Makefile targets with descriptions
 help:
